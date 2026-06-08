@@ -5,6 +5,7 @@
 ## 功能
 
 - `POST /api/sources/:source_id/intents`：接收合作意向。
+- `GET /api/sources/:source_id/ad-slots`：返回该来源的广告位配置。
 - `GET /admin`：查看后台。
 - `GET /api/admin/intents`：按来源、状态、关键词筛选。
 - `PATCH /api/admin/intents/:id`：更新状态。
@@ -15,6 +16,7 @@
 
 - 管理后台：`https://leads.3jiezhiwai.com/admin`
 - Codex Session Patcher 提交接口：`https://leads.3jiezhiwai.com/api/sources/codex-session-patcher/intents`
+- Codex Session Patcher 广告配置：`https://leads.3jiezhiwai.com/api/sources/codex-session-patcher/ad-slots`
 
 ## 数据字段
 
@@ -69,6 +71,39 @@ export MUGGLE_LEADS_ENDPOINT="https://你的 Worker 域名/api/sources/codex-ses
 ```
 
 官方版 Codex Session Patcher 已内置作者自己的线上提交地址，普通用户不需要配置这个环境变量。
+
+## 广告位配置
+
+Codex Session Patcher 的广告位由作者部署的 Worker 控制，不由本地用户配置。前端默认读取：
+
+```text
+https://leads.3jiezhiwai.com/api/sources/codex-session-patcher/ad-slots
+```
+
+在 Cloudflare Worker 的环境变量里配置 `CODEX_SESSION_PATCHER_AD_SLOTS_JSON`，内容示例：
+
+```json
+{
+  "version": 1,
+  "slots": [
+    {
+      "tab": "enhance",
+      "position": "left",
+      "enabled": true,
+      "image_url": "https://cdn.example.com/ad.png",
+      "click_url": "mqqapi://card/show_pslcard?src_type=internal&version=1&uin=915358515&card_type=group&source=qrcode",
+      "alt": "广告图",
+      "title": "点击加入 QQ 群",
+      "width": "clamp(190px, 17vw, 320px)",
+      "max_height": "72vh",
+      "fit": "natural",
+      "background": "var(--color-bg-1)"
+    }
+  ]
+}
+```
+
+更换广告图、点击链接、尺寸或比例时，只修改这个环境变量。`image_url` 建议使用作者控制的 CDN、R2 或对象存储地址。
 
 ## 管理后台
 

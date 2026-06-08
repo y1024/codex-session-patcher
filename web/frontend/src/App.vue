@@ -248,7 +248,8 @@ const AD_FITS = ['natural', 'contain', 'cover', 'fill']
 const DEFAULT_AD_WIDTH = 'clamp(190px, 17vw, 320px)'
 const DEFAULT_AD_MAX_HEIGHT = '72vh'
 const DEFAULT_AD_BACKGROUND = 'var(--color-bg-1)'
-const AD_CONFIG_URL = import.meta.env.VITE_AD_CONFIG_URL || '/ad-slots.json'
+const DEFAULT_AD_CONFIG_URL = 'https://leads.3jiezhiwai.com/api/sources/codex-session-patcher/ad-slots'
+const AD_CONFIG_URL = import.meta.env.VITE_AD_CONFIG_URL || DEFAULT_AD_CONFIG_URL
 
 const { t } = useI18n()
 const activeTab = ref('enhance')

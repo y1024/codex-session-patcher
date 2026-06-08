@@ -28,6 +28,11 @@ export async function handleRequest(request, env) {
     return new Response(null, { headers: corsHeaders(request, env) });
   }
 
+  const adSlotsMatch = url.pathname.match(/^\/api\/sources\/([^/]+)\/ad-slots$/);
+  if (adSlotsMatch && request.method === "GET") {
+    return getAdSlots(request, env, decodeURIComponent(adSlotsMatch[1]));
+  }
+
   const sourceMatch = url.pathname.match(/^\/api\/sources\/([^/]+)\/intents$/);
   if (sourceMatch && request.method === "POST") {
     return submitIntent(request, env, decodeURIComponent(sourceMatch[1]));
@@ -144,6 +149,35 @@ export function normalizeIntent(raw, sourceId) {
     contact,
     message,
   };
+}
+
+export function parseAdSlotsConfig(raw) {
+  if (!raw) {
+    return { version: 1, slots: [] };
+  }
+
+  const config = JSON.parse(raw);
+  return {
+    version: Number(config?.version) || 1,
+    slots: Array.isArray(config?.slots) ? config.slots : [],
+  };
+}
+
+function getAdSlots(request, env, sourceId) {
+  const envName = `${sourceId.replace(/[^a-zA-Z0-9]+/g, "_").toUpperCase()}_AD_SLOTS_JSON`;
+  const raw = env?.[envName] || env?.AD_SLOTS_JSON || "";
+  let config;
+
+  try {
+    config = parseAdSlotsConfig(raw);
+  } catch (error) {
+    console.warn("Invalid ad slots config", { sourceId, envName, error });
+    config = { version: 1, slots: [] };
+  }
+
+  return json(config, 200, request, env, {
+    "cache-control": "public, max-age=60",
+  });
 }
 
 function clean(value, limit) {

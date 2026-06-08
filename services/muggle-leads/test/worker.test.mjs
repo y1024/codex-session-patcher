@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildTelegramText, handleRequest, normalizeIntent } from "../src/worker.js";
+import { buildTelegramText, handleRequest, normalizeIntent, parseAdSlotsConfig } from "../src/worker.js";
 
 class FakeDB {
   constructor() {
@@ -107,6 +107,49 @@ test("buildTelegramText includes source fields", () => {
   assert.match(text, /来源: Codex Session Patcher/);
   assert.match(text, /版本: 1.4.4/);
   assert.match(text, /广告位出租/);
+});
+
+test("parseAdSlotsConfig returns slots from JSON env value", () => {
+  const config = parseAdSlotsConfig(JSON.stringify({
+    version: 1,
+    slots: [
+      {
+        tab: "enhance",
+        position: "left",
+        enabled: true,
+        image_url: "https://cdn.example.com/ad.png",
+      },
+    ],
+  }));
+
+  assert.equal(config.version, 1);
+  assert.equal(config.slots.length, 1);
+  assert.equal(config.slots[0].tab, "enhance");
+});
+
+test("ad slots endpoint reads source-specific env value", async () => {
+  const request = new Request("https://leads.example/api/sources/codex-session-patcher/ad-slots", {
+    method: "GET",
+  });
+  const response = await handleRequest(request, {
+    CODEX_SESSION_PATCHER_AD_SLOTS_JSON: JSON.stringify({
+      version: 1,
+      slots: [
+        {
+          tab: "enhance",
+          position: "right",
+          enabled: true,
+          image_url: "https://cdn.example.com/ad.png",
+        },
+      ],
+    }),
+  });
+  const data = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(data.slots.length, 1);
+  assert.equal(data.slots[0].position, "right");
+  assert.equal(response.headers.get("cache-control"), "public, max-age=60");
 });
 
 test("submit intent saves to D1 and returns success", async () => {
